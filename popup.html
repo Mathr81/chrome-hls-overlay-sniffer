@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { width: 340px; font-family: 'Segoe UI', sans-serif; padding: 12px; background: #fff; color:#333; }
+    
+    /* Header avec bouton Clean */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    h3 { margin: 0; font-size: 14px; text-transform: uppercase; color: #444; }
+    
+    #clear-btn {
+        background: #f44336; color: white; border: none; padding: 4px 8px;
+        border-radius: 4px; cursor: pointer; font-size: 11px;
+    }
+    #clear-btn:hover { background: #d32f2f; }
+
+    /* Section Player */
+    .player-info {
+        background: #f0f7ff; border-left: 4px solid #2196f3;
+        padding: 10px; margin-bottom: 15px; border-radius: 0 4px 4px 0;
+    }
+    .real-res { font-size: 22px; font-weight: 700; color: #333; display: block; }
+    .status { font-size: 11px; color: #666; margin-top: 2px;}
+
+    /* Liste des streams */
+    .stream-container { 
+      border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; padding: 10px; 
+      background: #fafafa; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .url { font-size: 10px; color: #999; word-break: break-all; font-family: monospace; }
+    
+    .badge {
+      display: inline-block; padding: 3px 6px; border-radius: 4px;
+      font-size: 10px; font-weight: 600; color: white;
+    }
+    
+    .copy-btn {
+        background: #fff; border: 1px solid #ccc; border-radius: 3px;
+        cursor: pointer; font-size: 10px; padding: 2px 6px; color: #555;
+    }
+    .copy-btn:hover { background: #eee; }
+    .no-stream { text-align: center; color: #999; font-style: italic; font-size: 12px; margin-top: 20px;}
+  </style>
+</head>
+<body>
+  
+  <div class="player-info">
+    <span id="player-res" class="real-res">-- x --</span>
+    <div id="player-status" class="status">Recherche du lecteur...</div>
+  </div>
+
+  <div class="header">
+      <h3>Flux Détectés</h3>
+      <button id="clear-btn" title="Effacer la liste">🗑️ Nettoyer</button>
+  </div>
+
+  <div id="content">Chargement...</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
