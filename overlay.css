@@ -1,64 +1,66 @@
 #hls-stats-overlay {
-  position: fixed;
-  top: 60px;
-  left: 60px;
-  width: 290px;
-  background: rgba(18, 18, 18, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  position: fixed; top: 50px; left: 50px;
+  width: 280px;
+  background: rgba(15, 15, 15, 0.95);
+  backdrop-filter: blur(10px);
   color: #eee;
   z-index: 2147483647;
   font-family: 'Segoe UI', sans-serif;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
   font-size: 11px;
   display: none;
   user-select: none;
-  overflow: hidden;
 }
 
 #hls-stats-header {
-  padding: 12px 15px;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  padding: 10px 12px;
+  background: linear-gradient(to right, #212121, #000);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: grab; /* Curseur main */
+  display: flex; justify-content: space-between; align-items: center;
+  border-radius: 8px 8px 0 0; cursor: grab;
+  font-weight: 700; letter-spacing: 0.5px;
+}
+#hls-stats-header:active { cursor: grabbing; }
+
+#hls-stats-content { padding: 12px; max-height: 450px; overflow-y: auto; }
+
+.hls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.hls-label { color: #888; font-size: 10px; margin-bottom: 2px; }
+.hls-value { font-family: monospace; font-size: 14px; font-weight: bold; color: #fff; }
+
+.hls-separator { border: 0; border-top: 1px solid #333; margin: 10px 0; }
+.hls-section-title { font-size: 9px; font-weight: bold; color: #666; margin-bottom: 8px; text-transform: uppercase; }
+
+/* Stream Cards */
+.hls-stream-card {
+  background: #1e1e1e; border: 1px solid #333;
+  padding: 10px; border-radius: 6px; margin-bottom: 6px;
+}
+.hls-stream-card.active {
+  background: rgba(46, 125, 50, 0.15); /* Vert foncé très léger */
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.1);
 }
 
-#hls-stats-header:active {
-  cursor: grabbing;
-}
+.hls-url { font-size: 9px; color: #777; margin: 4px 0; word-break: break-all; font-family: monospace; }
 
-#hls-stats-content {
-  padding: 15px;
-  max-height: 400px;
-  overflow-y: auto;
-}
+/* Badges */
+.hls-badge { display: inline-block; padding: 2px 5px; border-radius: 3px; font-size: 9px; margin-right: 4px; color: #fff; font-weight: 600; }
+.hls-badge.drm { background: #d32f2f; } /* Rouge */
+.hls-badge.audio { background: #f57c00; } /* Orange */
 
-.hls-stat-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 6px;
-  align-items: center;
+/* Buttons */
+.hls-copy-btn {
+  background: #333; border: none; color: #ccc; cursor: pointer;
+  padding: 2px 6px; font-size: 9px; border-radius: 3px;
 }
+.hls-copy-btn:hover { background: #555; color: #fff; }
 
-.hls-label { color: #888; }
-.hls-value { font-family: monospace; font-size: 12px; font-weight: bold; }
-.hls-separator { border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 12px 0; }
-
-.hls-stream-item {
-  background: rgba(0,0,0,0.2);
-  padding: 8px;
-  border-radius: 6px;
-  margin-bottom: 6px;
-  border: 1px solid rgba(255,255,255,0.03);
+#hls-toggle-history {
+  width: 100%; padding: 8px; margin-top: 8px;
+  background: transparent; border: 1px dashed #444; color: #888;
+  cursor: pointer; border-radius: 4px; font-size: 10px;
 }
-
-.hls-badge {
-  display: inline-block; padding: 2px 5px; border-radius: 4px;
-  font-size: 9px; margin-right: 4px; margin-bottom: 2px; color: #fff;
-  font-weight: 600;
-}
+#hls-toggle-history:hover { background: rgba(255,255,255,0.05); color: #bbb; }
