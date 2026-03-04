@@ -52,11 +52,19 @@
 .hls-badge.audio { background: #f57c00; } /* Orange */
 
 /* Buttons */
-.hls-copy-btn {
-  background: #333; border: none; color: #ccc; cursor: pointer;
-  padding: 2px 6px; font-size: 9px; border-radius: 3px;
+.hls-copy-btn, .hls-icon-btn {
+  background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #ccc; cursor: pointer;
+  padding: 4px; font-size: 9px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s ease;
 }
-.hls-copy-btn:hover { background: #555; color: #fff; }
+.hls-copy-btn:hover, .hls-icon-btn:hover { background: rgba(255, 255, 255, 0.15); color: #fff; border-color: rgba(255, 255, 255, 0.3); }
+.hls-icon-btn svg { width: 14px; height: 14px; }
+
+#hls-stats-content::-webkit-scrollbar { width: 4px; }
+#hls-stats-content::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+
+.hls-empty { text-align: center; padding: 10px; color: #666; font-style: italic; }
 
 #hls-toggle-history {
   width: 100%; padding: 8px; margin-top: 8px;

@@ -1,12 +1,19 @@
-let detectedStreams = {}; // { tabId: [stream1, stream2] }
+let tabStates = {}; // { tabId: { overlayVisible: false, videoStats: { width, height } } }
 
 chrome.runtime.onInstalled.addListener(() => {
     chrome.storage.local.clear();
 });
 
-chrome.tabs.onRemoved.addListener((tabId) => chrome.storage.local.remove(tabId.toString()));
+chrome.tabs.onRemoved.addListener((tabId) => {
+    chrome.storage.local.remove(tabId.toString());
+    delete tabStates[tabId];
+});
+
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  if (changeInfo.status === 'loading') chrome.storage.local.remove(tabId.toString());
+  if (changeInfo.status === 'loading') {
+      chrome.storage.local.remove(tabId.toString());
+      tabStates[tabId] = { overlayVisible: false, videoStats: null };
+  }
 });
 
 chrome.webRequest.onBeforeRequest.addListener(
@@ -27,7 +34,6 @@ async function fetchAndParseM3U8(url, tabId) {
     if (!response.ok) throw new Error("Auth/Network");
     const text = await response.text();
     
-    // Analyse approfondie
     const { levels, isMaster, hasEncryption, hasAudio } = parseM3U8(text);
     
     const streamData = {
@@ -41,13 +47,12 @@ async function fetchAndParseM3U8(url, tabId) {
     updateStorage(key, streamData, tabId);
 
   } catch (error) {
-    // En cas d'échec (protection), on ajoute quand même l'entrée
     const fallbackData = {
         url: url,
         levels: [{ resolution: "Protégé / Inconnu", bandwidth: "N/A" }],
         type: 'Unknown',
         timestamp: Date.now(),
-        features: { drm: true, audio: false } // On suppose DRM si échec lecture
+        features: { drm: true, audio: false }
     };
     updateStorage(key, fallbackData, tabId);
   }
@@ -56,16 +61,10 @@ async function fetchAndParseM3U8(url, tabId) {
 function updateStorage(key, newData, tabId) {
     chrome.storage.local.get([key], (result) => {
         let streams = result[key] || [];
-        
-        // --- ANTI DOUBLON ---
         const existingIndex = streams.findIndex(s => s.url === newData.url);
         
         if (existingIndex !== -1) {
-            // Mise à jour : on remplace l'ancien seulement si le nouveau a des infos
-            // Ou on met à jour le timestamp pour dire "c'est le dernier vu"
             streams[existingIndex] = { ...streams[existingIndex], ...newData };
-            
-            // On le déplace à la fin (le plus récent)
             const item = streams.splice(existingIndex, 1)[0];
             streams.push(item);
         } else {
@@ -76,7 +75,6 @@ function updateStorage(key, newData, tabId) {
         chrome.action.setBadgeText({ text: streams.length.toString(), tabId: tabId });
         chrome.action.setBadgeBackgroundColor({ color: "#FF0000", tabId: tabId });
 
-        // Update Live
         chrome.tabs.sendMessage(tabId, { action: "updateStreams", streams: streams }).catch(()=>{});
     });
 }
@@ -85,8 +83,8 @@ function parseM3U8(content) {
   const lines = content.split('\n');
   const qualities = [];
   let isMaster = false;
-  let hasEncryption = content.includes("#EXT-X-KEY"); // Détection DRM
-  let hasAudio = content.includes("#EXT-X-MEDIA:TYPE=AUDIO"); // Pistes Audio
+  let hasEncryption = content.includes("#EXT-X-KEY");
+  let hasAudio = content.includes("#EXT-X-MEDIA:TYPE=AUDIO");
   
   lines.forEach(line => {
     if (line.includes('#EXT-X-STREAM-INF')) {
@@ -109,7 +107,6 @@ function parseM3U8(content) {
     };
   }
 
-  // Si pas de master playlist, c'est un flux direct
   if (content.includes("#EXTINF")) {
       return { 
           levels: [{ resolution: "Flux Direct (Qualité Unique)", bandwidth: "Direct" }],
@@ -120,18 +117,53 @@ function parseM3U8(content) {
   return { levels: [{ resolution: "Inconnu", bandwidth: "" }], isMaster: false, hasEncryption, hasAudio };
 }
 
-// Raccourci Clavier
+// Global state management
 chrome.commands.onCommand.addListener((command) => {
   if (command === "toggle-overlay") {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if(tabs[0]) {
-          chrome.storage.local.get([tabs[0].id.toString()], (res) => {
-            chrome.tabs.sendMessage(tabs[0].id, { 
-                action: "toggleOverlay", 
-                streams: res[tabs[0].id.toString()] || [] 
+          const tabId = tabs[0].id;
+          if (!tabStates[tabId]) tabStates[tabId] = { overlayVisible: false, videoStats: null };
+          
+          tabStates[tabId].overlayVisible = !tabStates[tabId].overlayVisible;
+          
+          chrome.storage.local.get([tabId.toString()], (res) => {
+            chrome.tabs.sendMessage(tabId, { 
+                action: "setVisibility", 
+                visible: tabStates[tabId].overlayVisible,
+                streams: res[tabId.toString()] || [],
+                videoStats: tabStates[tabId].videoStats
             });
           });
       }
     });
   }
+});
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "reportVideoStats") {
+        const tabId = sender.tab.id;
+        if (!tabStates[tabId]) tabStates[tabId] = { overlayVisible: false, videoStats: null };
+        
+        // Prioritize playing videos or larger videos
+        if (!tabStates[tabId].videoStats || request.stats.playing || (request.stats.width * request.stats.height > tabStates[tabId].videoStats.width * tabStates[tabId].videoStats.height)) {
+            tabStates[tabId].videoStats = request.stats;
+            
+            // Broadcast update if overlay is visible
+            if (tabStates[tabId].overlayVisible) {
+                chrome.tabs.sendMessage(tabId, { 
+                    action: "updateVideoStats", 
+                    videoStats: request.stats 
+                }).catch(()=>{});
+            }
+        }
+    }
+    if (request.action === "getOverlayState") {
+        const tabId = sender.tab.id;
+        sendResponse({ 
+            visible: tabStates[tabId] ? tabStates[tabId].overlayVisible : false,
+            videoStats: tabStates[tabId] ? tabStates[tabId].videoStats : null
+        });
+    }
+    return true; // Allow async sendResponse
 });
