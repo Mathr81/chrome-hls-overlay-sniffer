@@ -8,17 +8,17 @@ Une extension Chrome puissante pour les développeurs et les curieux du streamin
 
 *   **Sniffer Réseau :** Détecte automatiquement les liens `.m3u8` (Master & Media Playlists).
 *   **Analyseur de Qualité :** Affiche les variantes de résolutions disponibles (1080p, 720p, 4K...) et la bande passante.
-*   **Détection Réelle :** Injecte un script pour lire la résolution de décodage du lecteur HTML5 (`<video>`) afin de vérifier si vous regardez vraiment du 1080p ou un flux upscalé.
+*   **Détection Réelle Multi-Frames :** Analyse toutes les frames (iframes, embeds) pour extraire la résolution réelle du décodeur vidéo HTML5 (`<video>`).
 *   **Overlay "Stats for Nerds" :**
-    *   Compatible **Plein Écran** (s'injecte dans le contexte fullscreen).
-    *   Draggable (déplaçable).
-    *   Mise à jour en temps réel.
+    *   Compatible **Plein Écran** (s'injecte dynamiquement dans le contexte fullscreen).
+    *   Draggable (déplaçable) avec mémorisation de l'état.
+    *   Mise à jour en temps réel (détection automatique du changement de source).
     *   Calcul du DPI Scaling (pour les écrans Retina/HiDPI).
-*   **Support Iframes :** Scanne toutes les frames de la page pour trouver les lecteurs cachés (ex: embeds de streaming).
+*   **Interface Intuitive :**
+    *   **Copie Rapide** : Icônes dédiées pour copier l'URL du flux ou la commande FFmpeg.
+    *   **Historique** : Garde une trace des flux détectés précédemment sur la page.
 
 ## 🚀 Installation
-
-Cette extension n'est pas encore sur le Chrome Web Store. Pour l'installer :
 
 1.  Clonez ce dépôt ou téléchargez le ZIP.
 2.  Ouvrez Chrome et allez sur `chrome://extensions/`.
@@ -28,16 +28,14 @@ Cette extension n'est pas encore sur le Chrome Web Store. Pour l'installer :
 
 ## 🎮 Utilisation
 
-### Via le Popup
-Cliquez sur l'icône de l'extension pour voir :
-*   La résolution affichée à l'écran.
-*   La liste des flux `.m3u8` capturés.
-*   Copier les liens en un clic.
-
 ### Via l'Overlay (Raccourci)
 *   Appuyez sur **`Alt + S`** (Option + S sur Mac) à tout moment.
 *   Une fenêtre translucide apparaîtra par-dessus la vidéo (même en plein écran).
-*   Elle affiche les stats techniques et la liste des flux en direct.
+*   **Icônes d'action** :
+    *   📋 : Copie l'URL directe du flux `.m3u8`.
+    *   💻 : Copie la commande `ffmpeg` pour enregistrer le flux.
+*   **Rendu** : Affiche la résolution de sortie réelle de la vidéo.
+*   **Écran** : Affiche la résolution logique multipliée par le ratio de pixel de l'écran.
 
 ## 🛠️ Stack Technique
 
