@@ -3,59 +3,108 @@
 <head>
   <meta charset="utf-8">
   <style>
-    body { width: 340px; font-family: 'Segoe UI', sans-serif; padding: 12px; background: #fff; color:#333; }
-    
-    /* Header avec bouton Clean */
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    h3 { margin: 0; font-size: 14px; text-transform: uppercase; color: #444; }
-    
-    #clear-btn {
-        background: #f44336; color: white; border: none; padding: 4px 8px;
-        border-radius: 4px; cursor: pointer; font-size: 11px;
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      width: 360px; margin: 0; padding: 12px;
+      font-family: 'Segoe UI', sans-serif;
+      background: #141414; color: #ddd; font-size: 12px;
     }
-    #clear-btn:hover { background: #d32f2f; }
 
-    /* Section Player */
-    .player-info {
-        background: #f0f7ff; border-left: 4px solid #2196f3;
-        padding: 10px; margin-bottom: 15px; border-radius: 0 4px 4px 0;
+    /* --- Bloc bitrate --- */
+    .hero {
+      background: linear-gradient(160deg, #1d1d1d, #151515);
+      border: 1px solid #2a2a2a; border-radius: 8px;
+      padding: 12px; margin-bottom: 12px;
     }
-    .real-res { font-size: 22px; font-weight: 700; color: #333; display: block; }
-    .status { font-size: 11px; color: #666; margin-top: 2px;}
+    .hero-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+    .hero-row { display: flex; align-items: baseline; gap: 6px; margin-top: 2px; }
+    .hero-value { font-family: Consolas, monospace; font-size: 30px; font-weight: 700; line-height: 1; color: #00E676; }
+    .hero-unit { font-size: 12px; color: #777; font-weight: 600; }
+    .hero-sub { font-size: 11px; color: #999; margin-top: 6px; }
 
-    /* Liste des streams */
-    .stream-container { 
-      border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; padding: 10px; 
-      background: #fafafa; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+    .metric { background: rgba(255,255,255,.04); border-radius: 5px; padding: 6px; text-align: center; }
+    .metric .m-label { font-size: 9px; color: #777; text-transform: uppercase; }
+    .metric .m-value { font-family: monospace; font-size: 13px; font-weight: 700; color: #fff; margin-top: 2px; }
+
+    /* --- En-tête liste --- */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    h3 { margin: 0; font-size: 12px; text-transform: uppercase; color: #888; letter-spacing: .5px; }
+    .tools { display: flex; gap: 6px; }
+    .tools button {
+      background: #262626; color: #bbb; border: 1px solid #333; padding: 4px 8px;
+      border-radius: 4px; cursor: pointer; font-size: 10px;
     }
-    .url { font-size: 10px; color: #999; word-break: break-all; font-family: monospace; }
-    
-    .badge {
-      display: inline-block; padding: 3px 6px; border-radius: 4px;
-      font-size: 10px; font-weight: 600; color: white;
+    .tools button:hover { background: #303030; color: #fff; }
+    #clear-btn { background: #4a1f1f; border-color: #6b2b2b; color: #ff8a80; }
+    #clear-btn:hover { background: #612626; }
+
+    /* --- Cartes --- */
+    .stream-container {
+      border: 1px solid #2a2a2a; border-radius: 6px; margin-bottom: 8px;
+      padding: 10px; background: #1b1b1b;
     }
-    
-    .copy-btn {
-        background: #fff; border: 1px solid #ccc; border-radius: 3px;
-        cursor: pointer; font-size: 10px; padding: 2px 6px; color: #555;
+    .stream-container.top { border-color: rgba(76,175,80,.4); background: rgba(46,125,50,.10); }
+    .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .card-head strong { color: #eee; font-size: 11px; }
+    .url { font-size: 10px; color: #777; word-break: break-all; font-family: monospace; }
+
+    .badges { margin: 6px 0 4px; }
+    .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; color: #fff; margin: 0 4px 4px 0; background: #444; }
+    .badge.drm { background: #d32f2f; }
+    .badge.enc { background: #6d4c41; }
+    .badge.live { background: #c62828; }
+    .badge.vod { background: #1565c0; }
+    .badge.audio { background: #f57c00; }
+    .badge.subs { background: #5e35b1; }
+
+    .levels { margin-top: 6px; border-top: 1px solid #262626; padding-top: 5px; }
+    .level {
+      display: flex; justify-content: space-between; gap: 8px; align-items: center;
+      font-family: monospace; font-size: 10px; color: #999;
+      padding: 3px 5px; border-radius: 3px; cursor: pointer;
     }
-    .copy-btn:hover { background: #eee; }
-    .no-stream { text-align: center; color: #999; font-style: italic; font-size: 12px; margin-top: 20px;}
+    .level:hover { background: rgba(255,255,255,.06); color: #fff; }
+    .level.current { background: rgba(0,230,118,.14); color: #00E676; font-weight: 700; }
+    .level .l-rate { color: #6f6f6f; }
+    .level.current .l-rate { color: #8BC34A; }
+    .estimate { font-size: 10px; color: #777; font-style: italic; margin-top: 6px; }
+
+    .copy-btn { background: #262626; border: 1px solid #333; border-radius: 3px; cursor: pointer; font-size: 10px; padding: 3px 7px; color: #bbb; }
+    .copy-btn:hover { background: #333; color: #fff; }
+    .no-stream { text-align: center; color: #666; font-style: italic; font-size: 12px; margin: 24px 0; }
+    .hint { font-size: 10px; color: #555; text-align: center; margin-top: 10px; }
   </style>
 </head>
 <body>
-  
-  <div class="player-info">
-    <span id="player-res" class="real-res">-- x --</span>
-    <div id="player-status" class="status">Recherche du lecteur...</div>
+
+  <div class="hero">
+    <div class="hero-label">Bitrate lu (vidéo + audio)</div>
+    <div class="hero-row">
+      <span id="bitrate-val" class="hero-value">--</span>
+      <span id="bitrate-unit" class="hero-unit"></span>
+    </div>
+    <div id="player-status" class="hero-sub">Recherche du lecteur…</div>
+
+    <div class="metrics">
+      <div class="metric"><div class="m-label">Rendu</div><div class="m-value" id="player-res">--</div></div>
+      <div class="metric"><div class="m-label">FPS</div><div class="m-value" id="player-fps">--</div></div>
+      <div class="metric"><div class="m-label">Buffer</div><div class="m-value" id="player-buffer">--</div></div>
+      <div class="metric"><div class="m-label">Réseau</div><div class="m-value" id="player-net">--</div></div>
+    </div>
   </div>
 
   <div class="header">
-      <h3>Flux Détectés</h3>
+    <h3>Flux détectés</h3>
+    <div class="tools">
+      <button id="json-btn" title="Copier toutes les données en JSON">📄 JSON</button>
       <button id="clear-btn" title="Effacer la liste">🗑️ Nettoyer</button>
+    </div>
   </div>
 
-  <div id="content">Chargement...</div>
+  <div id="content">Chargement…</div>
+  <div class="hint">Alt + S : overlay plein écran · clic sur une variante : copier son URL</div>
 
   <script src="popup.js"></script>
 </body>

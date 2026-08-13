@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "HLS Sniffer Pro",
-  "version": "2.0",
-  "description": "Détecte les flux HLS, résolution réelle et overlay compatible plein écran.",
+  "version": "2.1",
+  "description": "Détecte les flux HLS : bitrate en temps réel, résolution réelle, codecs, FPS et overlay compatible plein écran.",
   "permissions": [
     "webRequest",
     "storage",

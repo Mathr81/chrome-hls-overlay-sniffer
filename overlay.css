@@ -1,6 +1,6 @@
 #hls-stats-overlay {
   position: fixed; top: 50px; left: 50px;
-  width: 280px;
+  width: 300px;
   background: rgba(15, 15, 15, 0.95);
   backdrop-filter: blur(10px);
   color: #eee;
@@ -12,7 +12,9 @@
   font-size: 11px;
   display: none;
   user-select: none;
+  box-sizing: border-box;
 }
+#hls-stats-overlay * { box-sizing: border-box; }
 
 #hls-stats-header {
   padding: 10px 12px;
@@ -24,34 +26,99 @@
 }
 #hls-stats-header:active { cursor: grabbing; }
 
-#hls-stats-content { padding: 12px; max-height: 450px; overflow-y: auto; }
+.hls-hdr-actions { display: flex; gap: 4px; }
+.hls-hdr-actions > span {
+  cursor: pointer; font-size: 14px; line-height: 1; padding: 0 5px;
+  color: #999; transition: color .15s ease;
+}
+.hls-hdr-actions > span:hover { color: #fff; }
 
-.hls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+#hls-stats-content { padding: 12px; max-height: 480px; overflow-y: auto; }
+#hls-stats-overlay.hls-collapsed { width: 220px; }
+#hls-stats-overlay.hls-collapsed #hls-stats-content > *:not(.hls-hero) { display: none; }
+#hls-stats-overlay.hls-collapsed .hls-hero { margin-bottom: 0; }
+
+/* --- Bloc bitrate --- */
+.hls-hero {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  padding: 8px 10px 6px;
+  margin-bottom: 10px;
+}
+.hls-hero-row { display: flex; align-items: baseline; gap: 5px; margin: 1px 0 4px; }
+.hls-hero-value {
+  font-family: 'Consolas', monospace; font-size: 26px; font-weight: 700;
+  line-height: 1; color: #00E676; letter-spacing: -0.5px;
+}
+.hls-hero-unit { font-size: 11px; color: #888; font-weight: 600; }
+
+#hls-graph { display: block; width: 100%; height: 44px; }
+.hls-graph-axis {
+  display: flex; justify-content: space-between;
+  font-size: 9px; color: #666; margin-top: 2px; font-family: monospace;
+}
+
+/* --- Grille de valeurs --- */
+.hls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; margin-bottom: 10px; }
 .hls-label { color: #888; font-size: 10px; margin-bottom: 2px; }
 .hls-value { font-family: monospace; font-size: 14px; font-weight: bold; color: #fff; }
+
+/* --- Liste clé/valeur --- */
+.hls-kv-list {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 8px;
+}
+.hls-kv {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 2px 0; font-size: 10px; color: #888;
+}
+.hls-kv b { color: #ccc; font-family: monospace; font-weight: 600; font-size: 10.5px; }
 
 .hls-separator { border: 0; border-top: 1px solid #333; margin: 10px 0; }
 .hls-section-title { font-size: 9px; font-weight: bold; color: #666; margin-bottom: 8px; text-transform: uppercase; }
 
-/* Stream Cards */
+/* --- Cartes de flux --- */
 .hls-stream-card {
   background: #1e1e1e; border: 1px solid #333;
   padding: 10px; border-radius: 6px; margin-bottom: 6px;
 }
 .hls-stream-card.active {
-  background: rgba(46, 125, 50, 0.15); /* Vert foncé très léger */
+  background: rgba(46, 125, 50, 0.15);
   border: 1px solid rgba(76, 175, 80, 0.4);
   box-shadow: 0 0 10px rgba(76, 175, 80, 0.1);
 }
+.hls-card-head { display: flex; justify-content: space-between; align-items: flex-start; }
+.hls-card-title { font-weight: bold; font-size: 11px; }
+.hls-card-actions { display: flex; gap: 5px; }
 
 .hls-url { font-size: 9px; color: #777; margin: 4px 0; word-break: break-all; font-family: monospace; }
+.hls-badges { margin: 5px 0; }
 
-/* Badges */
-.hls-badge { display: inline-block; padding: 2px 5px; border-radius: 3px; font-size: 9px; margin-right: 4px; color: #fff; font-weight: 600; }
-.hls-badge.drm { background: #d32f2f; } /* Rouge */
-.hls-badge.audio { background: #f57c00; } /* Orange */
+/* --- Variantes --- */
+.hls-levels { margin-top: 6px; }
+.hls-level {
+  display: flex; justify-content: space-between; gap: 8px;
+  font-family: monospace; font-size: 9.5px; color: #999;
+  padding: 2px 4px; border-radius: 3px;
+}
+.hls-level.current { background: rgba(0, 230, 118, 0.14); color: #00E676; font-weight: 700; }
+.hls-level-res { white-space: nowrap; }
+.hls-level-rate { color: #7a7a7a; }
+.hls-level.current .hls-level-rate { color: #8BC34A; }
+.hls-level-more { font-size: 9px; color: #555; padding: 2px 4px; font-style: italic; }
+.hls-estimate { font-size: 9px; color: #777; margin-top: 5px; font-style: italic; }
 
-/* Buttons */
+/* --- Badges --- */
+.hls-badge { display: inline-block; padding: 2px 5px; border-radius: 3px; font-size: 9px; margin: 0 4px 3px 0; color: #fff; font-weight: 600; background: #444; }
+.hls-badge.drm { background: #d32f2f; }
+.hls-badge.enc { background: #6d4c41; }
+.hls-badge.audio { background: #f57c00; }
+.hls-badge.subs { background: #5e35b1; }
+.hls-badge.live { background: #c62828; }
+.hls-badge.vod { background: #1565c0; }
+
+/* --- Boutons --- */
 .hls-copy-btn, .hls-icon-btn {
   background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #ccc; cursor: pointer;
   padding: 4px; font-size: 9px; border-radius: 4px;
