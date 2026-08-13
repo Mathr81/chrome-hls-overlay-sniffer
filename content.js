@@ -9,6 +9,7 @@ let currentStreams = [];
 let lastVideoStats = null;
 let lastNetStats = null;
 let bitrateHistory = [];            // [{ t, bps }] sur 60 s
+let sampleTimer = null;
 const HISTORY_MS = 60000;
 const SAMPLE_MS = 1000;
 
@@ -146,11 +147,78 @@ function collectVideoStats() {
 // même monde isolé que ce content script, il peut donc réutiliser le sampler.
 window.__hlsSnifferGetStats = () => collectVideoStats();
 
+/* ------------------------------------------------------------
+   Accès à l'API chrome (résistant au rechargement de l'extension)
+   ------------------------------------------------------------ */
+
+// Recharger / mettre à jour / désactiver l'extension laisse les anciens content
+// scripts vivants dans la page, avec un chrome.runtime mort. Sans garde, le
+// timer d'échantillonnage lève « Extension context invalidated » chaque seconde.
+function contextAlive() {
+  try { return !!(chrome.runtime && chrome.runtime.id); } catch (e) { return false; }
+}
+
+let torn = false;
+
+function teardown() {
+  if (torn) return;
+  torn = true;
+  clearInterval(sampleTimer);
+  ['play', 'playing', 'loadedmetadata', 'resize'].forEach((evt) =>
+    document.removeEventListener(evt, reportVideoStats, true)
+  );
+  // L'overlay orphelin afficherait des chiffres figés : mieux vaut le retirer,
+  // la page doit être rechargée pour retrouver un content script vivant.
+  const el = document.getElementById('hls-stats-overlay');
+  if (el) el.remove();
+  overlay = null;
+}
+
+// Le contexte peut aussi mourir entre l'envoi et la réponse : lire lastError
+// depuis le callback lèverait à son tour, d'où le try/catch interne.
+function guardedCallback(callback) {
+  return (res) => {
+    try {
+      if (chrome.runtime.lastError) return; // récepteur absent : sans conséquence
+      if (callback) callback(res);
+    } catch (e) {
+      teardown();
+    }
+  };
+}
+
+function sendMessage(payload, callback) {
+  if (!contextAlive()) { teardown(); return; }
+  try {
+    chrome.runtime.sendMessage(payload, guardedCallback(callback));
+  } catch (e) {
+    teardown();
+  }
+}
+
+function storageGet(keys, callback) {
+  if (!contextAlive()) { teardown(); return; }
+  try {
+    chrome.storage.local.get(keys, guardedCallback(callback));
+  } catch (e) {
+    teardown();
+  }
+}
+
+function storageSet(items) {
+  if (!contextAlive()) { teardown(); return; }
+  try {
+    chrome.storage.local.set(items, guardedCallback(null));
+  } catch (e) {
+    teardown();
+  }
+}
+
 function reportVideoStats() {
   const stats = collectVideoStats();
   if (!stats) return;
-  chrome.runtime.sendMessage({ action: 'reportVideoStats', stats }, (res) => {
-    if (chrome.runtime.lastError || !res) return;
+  sendMessage({ action: 'reportVideoStats', stats }, (res) => {
+    if (!res) return;
     // Le frame porteur de l'overlay récupère aussi le débit réseau de l'onglet
     if (res.net) lastNetStats = res.net;
     if (res.videoStats) lastVideoStats = res.videoStats;
@@ -158,7 +226,7 @@ function reportVideoStats() {
   });
 }
 
-setInterval(reportVideoStats, SAMPLE_MS);
+sampleTimer = setInterval(reportVideoStats, SAMPLE_MS);
 ['play', 'playing', 'loadedmetadata', 'resize'].forEach((evt) =>
   document.addEventListener(evt, reportVideoStats, true)
 );
@@ -263,13 +331,13 @@ function createOverlay() {
 
   div.querySelector('#hls-close-btn').onclick = () => {
     setVisible(false);
-    chrome.runtime.sendMessage({ action: 'setOverlayVisible', visible: false });
+    sendMessage({ action: 'setOverlayVisible', visible: false });
   };
 
   div.querySelector('#hls-collapse-btn').onclick = () => {
     const collapsed = div.classList.toggle('hls-collapsed');
     div.querySelector('#hls-collapse-btn').innerText = collapsed ? '+' : '–';
-    chrome.storage.local.set({ hls_overlay_collapsed: collapsed });
+    storageSet({ hls_overlay_collapsed: collapsed });
   };
 
   div.querySelector('#hls-toggle-history').onclick = () => {
@@ -280,7 +348,7 @@ function createOverlay() {
     btn.innerText = show ? "Masquer l'historique" : "Voir l'historique";
   };
 
-  chrome.storage.local.get(['hls_overlay_collapsed'], (r) => {
+  storageGet(['hls_overlay_collapsed'], (r) => {
     if (r.hls_overlay_collapsed) {
       div.classList.add('hls-collapsed');
       div.querySelector('#hls-collapse-btn').innerText = '+';
@@ -303,7 +371,7 @@ function injectOverlay(element) {
 }
 
 function restorePosition(div) {
-  chrome.storage.local.get(['hls_overlay_pos'], (r) => {
+  storageGet(['hls_overlay_pos'], (r) => {
     const pos = r.hls_overlay_pos;
     if (!pos) return;
     const left = Math.min(Math.max(0, pos.left), Math.max(0, window.innerWidth - 120));
@@ -608,7 +676,7 @@ function setupDrag(elmnt) {
     document.removeEventListener('mouseup', onMouseUp, true);
     header.style.cursor = 'grab';
     const rect = elmnt.getBoundingClientRect();
-    chrome.storage.local.set({ hls_overlay_pos: { left: Math.round(rect.left), top: Math.round(rect.top) } });
+    storageSet({ hls_overlay_pos: { left: Math.round(rect.left), top: Math.round(rect.top) } });
   }
 }
 
@@ -651,8 +719,8 @@ chrome.runtime.onMessage.addListener((request) => {
       injectOverlay(el);
       drawGraph();
     } else if (isFS) {
-      chrome.runtime.sendMessage({ action: 'getOverlayState' }, (response) => {
-        if (chrome.runtime.lastError || !response || !response.visible) return;
+      sendMessage({ action: 'getOverlayState' }, (response) => {
+        if (!response || !response.visible) return;
         if (response.videoStats) lastVideoStats = response.videoStats;
         if (response.net) lastNetStats = response.net;
         createOverlay();
